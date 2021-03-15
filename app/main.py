@@ -6,11 +6,11 @@ from fastapi.encoders import jsonable_encoder
 from torch.utils.data import DataLoader
 import torch
 from typing import List, Optional
-from pytorch import get_device, PytorchMultiClass
+from pytorch import get_device, split_sets_random, pop_target
 
 app = FastAPI()
 
-nn_pipe = load('desktop/adsi_project/models/nn_pipeline.joblib')
+nn_pipe = load('../models/nn_pipeline.joblib')
 
 @app.get("/")
 def read_root():

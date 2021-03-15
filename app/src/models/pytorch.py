@@ -165,8 +165,8 @@ def train_classification(train_data, model, criterion, optimizer, batch_size, de
 
     return train_loss / len(train_data), train_acc / len(train_data)
 
-def test_classification(test_data, model, criterion, batch_size, device, generate_batch=None):
-    """Calculate performance of a Pytorch multi-class classification model
+def test_regression(test_data, model, criterion, batch_size, device, collate_fn=None):
+    """Calculate performance of a Pytorch regresssion model
 
     Parameters
     ----------
@@ -182,6 +182,41 @@ def test_classification(test_data, model, criterion, batch_size, device, generat
         Name of the device used for the model
     collate_fn : function
         Function defining required pre-processing steps
+
+    Returns
+    -------
+    Float
+        Loss score
+    Float:
+        RMSE Score
+    """    
+    
+    # Set model to evaluation mode
+    model.eval()
+    test_loss = 0
+
+    # Create data loader
+    data = DataLoader(test_data, batch_size=batch_size, collate_fn=collate_fn)
+    
+    # Iterate through data by batch of observations
+    for feature, target_class in data:
+        
+        # Load data to specified device
+        feature, target_class = feature.to(device), target_class.to(device)
+        
+        # Set no update to gradients
+        with torch.no_grad():
+            
+            # Make predictions
+            output = model(feature)
+            
+            # Calculate loss for given batch
+            loss = criterion(output, target_class)
+            
+            # Calculate global loss
+            test_loss += loss.item()
+            
+    return test_loss / len(test_data), np.sqrt(test_loss / len(test_data))
 
 def split_sets_random(df, target_col, test_ratio=0.2, to_numpy=False):
     """Split sets randomly
@@ -222,43 +257,34 @@ def split_sets_random(df, target_col, test_ratio=0.2, to_numpy=False):
 
     return X_train, y_train, X_val, y_val, X_test, y_test
 
+def pop_target(df, target_col, to_numpy=False):
+    """Extract target variable from dataframe and convert to nympy arrays if required
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Dataframe
+    target_col : str
+        Name of the target variable
+    to_numpy : bool
+        Flag stating to convert to numpy array or not
+
     Returns
     -------
-    Float
-        Loss score
-    Float:
-        Accuracy Score
-    """    
-    
-    # Set model to evaluation mode
-    model.eval()
-    test_loss = 0
-    test_acc = 0
-    
-    # Create data loader
-    data = DataLoader(test_data, batch_size=batch_size, collate_fn=generate_batch)
-    
-    # Iterate through data by batch of observations
-    for feature, target_class in data:
-        
-        # Load data to specified device
-        feature, target_class = feature.to(device), target_class.to(device)
-        
-        # Set no update to gradients
-        with torch.no_grad():
-            
-            # Make predictions
-            output = model(feature)
-            
-            # Calculate loss for given batch
-            loss = criterion(output, target_class.long())
+    pd.DataFrame/Numpy array
+        Subsetted Pandas dataframe containing all features
+    pd.DataFrame/Numpy array
+        Subsetted Pandas dataframe containing the target
+    """
 
-            # Calculate global loss
-            test_loss += loss.item()
-            
-            # Calculate global accuracy
-            test_acc += (output.argmax(1) == target_class).sum().item()
+    df_copy = df.copy()
+    target = df_copy.pop(target_col)
+    
+    if to_numpy:
+        df_copy = df_copy.to_numpy()
+        target = target.to_numpy()
+    
+    return df_copy, target
 
-    return test_loss / len(test_data), test_acc / len(test_data)
 
 
