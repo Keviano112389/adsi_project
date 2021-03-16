@@ -10,7 +10,6 @@ from pytorch import get_device, split_sets_random, pop_target
 
 app = FastAPI()
 
-nn_pipe = load('../models/nn_pipeline.joblib')
 
 @app.get("/")
 def read_root():
