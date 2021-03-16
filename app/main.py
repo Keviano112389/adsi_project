@@ -30,7 +30,7 @@ def format_features(brewery_name: str,	review_overall: int, review_aroma: int,
         'review_taste': [taste]
     }
 
-@app.get("/beers/type/")
+@app.post("/beers/type/")
 def predict(brewery_name: str,	review_overall: int, review_aroma: int,
             review_appearance: int, review_palate:int, review_taste:int):
     features = format_features(brewery_name,overall,aroma,appearance,palate,taste)
